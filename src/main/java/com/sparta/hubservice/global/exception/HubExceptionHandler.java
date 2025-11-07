@@ -1,8 +1,8 @@
-package com.sparta.hubservice.exception;
+package com.sparta.hubservice.global.exception;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sparta.hubservice.config.ApiResponse;
+import com.sparta.hubservice.global.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;

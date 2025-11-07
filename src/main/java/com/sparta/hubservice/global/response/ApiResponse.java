@@ -1,9 +1,12 @@
-package com.sparta.hubservice.config;
+package com.sparta.hubservice.global.response;
 
-import com.sparta.hubservice.exception.ErrorCode;
+import com.sparta.hubservice.global.exception.ErrorCode;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
+@Getter
+@Builder
 @AllArgsConstructor
 public class ApiResponse <T> {
 
