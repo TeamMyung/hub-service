@@ -1,7 +1,13 @@
 server:
   port: 8082
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8888/eureka/
 
 spring:
+  application:
+    name: hub-service
   datasource:
     url: jdbc:postgresql://localhost:5434/hub_db
     username: postgres
