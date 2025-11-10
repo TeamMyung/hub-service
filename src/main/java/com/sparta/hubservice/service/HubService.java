@@ -10,6 +10,7 @@ import com.sparta.hubservice.global.exception.HubException;
 import com.sparta.hubservice.repository.HubRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -38,26 +39,40 @@ public class HubService {
 
     // 허브 상세 조회
     @Transactional(readOnly = true)
-    @Cacheable(cacheNames = "hubCache", key = "#hubId")
+    @Cacheable(cacheNames = {"hubCache"}, key = "args[0]")
     public GetHubDetailResDto getHubDetail(UUID hubId) {
         return hubRepository.findHubDetail(hubId)
                 .orElseThrow(() -> new HubException(ErrorCode.HUB_NOT_FOUND));
     }
 
     // 허브 생성
-    @Transactional
     public CreateHubResDto createHub(CreateHubReqDto request) {
-
         if (hubRepository.existsByHubName(request.getHubName())) {
             throw new HubException(ErrorCode.HUB_DUPLICATE_NAME);
         }
 
-        Hub hub = Hub.ofNewHub(request.getHubName(),
+        Hub hub = Hub.ofNewHub(
+                request.getHubName(),
                 request.getHubAddress(),
                 request.getLatitude(),
-                request.getLongitude());
-
+                request.getLongitude()
+        );
         hubRepository.save(hub);
+
+        // 캐시용 DTO 생성
+        GetHubDetailResDto cacheDto = new GetHubDetailResDto(
+                hub.getHubId(),
+                hub.getHubName(),
+                request.getUserId(),
+                hub.getHubAddress(),
+                hub.getLongitude(),
+                hub.getLatitude(),
+                hub.getCreatedAt(),
+                hub.getUpdatedAt()
+        );
+
+        // 캐시에 저장
+        redisTemplate.opsForValue().set("hubCache::" + hub.getHubId(), cacheDto);
 
         return new CreateHubResDto(
                 hub.getHubId(),
@@ -66,17 +81,31 @@ public class HubService {
                 hub.getHubAddress(),
                 hub.getLongitude(),
                 hub.getLatitude(),
-                hub.getCreatedAt());
+                hub.getCreatedAt()
+        );
     }
 
     // 허브 수정
     @Transactional
-    @CacheEvict(cacheNames = {"hubCache"}, key = "#hubId")
     public UpdateHubResDto updateHub(UUID hubId, UpdateHubReqDto request) {
         Hub hub = hubRepository.findById(hubId)
                 .orElseThrow(() -> new HubException(ErrorCode.HUB_NOT_FOUND));
 
         hub.update(request);
+
+        // 캐시 업데이트
+        GetHubDetailResDto cacheDto = new GetHubDetailResDto(
+                hub.getHubId(),
+                hub.getHubName(),
+                request.getUserId(),
+                hub.getHubAddress(),
+                hub.getLongitude(),
+                hub.getLatitude(),
+                hub.getCreatedAt(),
+                hub.getUpdatedAt()
+        );
+        redisTemplate.opsForValue().set("hubCache::" + hub.getHubId(), cacheDto);
+
         return new UpdateHubResDto(
                 hub.getHubId(),
                 hub.getHubName(),
@@ -84,8 +113,10 @@ public class HubService {
                 hub.getHubAddress(),
                 hub.getLongitude(),
                 hub.getLatitude(),
-                hub.getUpdatedAt());
+                hub.getUpdatedAt()
+        );
     }
+
 
     // 허브 삭제
     @Transactional
