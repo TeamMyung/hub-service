@@ -8,10 +8,10 @@ import java.util.List;
 @Getter
 @Setter
 public class KakaoGetPathResDto {
-    private List<Path> paths;
+    private List<Route> routes;
 
     @Getter @Setter
-    public static class Path {
+    public static class Route {
         private Summary summary;
     }
 
