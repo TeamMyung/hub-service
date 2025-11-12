@@ -10,12 +10,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Component
+@Order(2)
 @RequiredArgsConstructor
 public class HubPathInitializer implements ApplicationRunner {
 
@@ -39,42 +42,49 @@ public class HubPathInitializer implements ApplicationRunner {
 
         log.info("허브 경로 초기화 시작 (총 {}개 허브)", hubs.size());
 
-        int count = 0;
-        for (Hub start : hubs) {
-            for (Hub end : hubs) {
-                if (start.equals(end)) continue;
+        AtomicInteger count = new AtomicInteger();
 
-                try {
-                    KakaoGetPathResDto path = kakaoMapClient.getPath(
-                            start.getLatitude(), start.getLongitude(),
-                            end.getLatitude(), end.getLongitude()
-                    );
+        hubs.parallelStream().forEach(start ->
+                hubs.stream()
+                        .filter(end -> !start.equals(end))
+                        .forEach(end -> {
+                            try {
+                                KakaoGetPathResDto path = kakaoMapClient.getPath(
+                                        start.getLatitude(), start.getLongitude(),
+                                        end.getLatitude(), end.getLongitude()
+                                );
 
-                    var summary = path.getRoutes().get(0).getSummary();
+                                // null 체크
+                                if (path == null || path.getRoutes() == null || path.getRoutes().isEmpty()) {
+                                    log.warn("경로 없음: {} → {}", start.getHubName(), end.getHubName());
+                                    return;
+                                }
 
-                    HubPath hubPath = HubPath.ofNewHubPath(
-                            start,
-                            end,
-                            summary.getDuration(),
-                            (int) summary.getDistance()
-                    );
+                                var summary = path.getRoutes().get(0).getSummary();
 
-                    hubPathRepository.save(hubPath);
+                                HubPath hubPath = HubPath.ofNewHubPath(
+                                        start,
+                                        end,
+                                        summary.getDuration(),
+                                        (int) summary.getDistance()
+                                );
 
-                    log.info("{} → {} 거리: {}m, 시간: {}초",
-                            start.getHubName(), end.getHubName(),
-                            summary.getDistance(), summary.getDuration());
+                                hubPathRepository.save(hubPath);
 
-                    count++;
-                } catch (Exception e) {
-                    log.error("경로 계산 실패: {} → {} ({})",
-                            start.getHubName(), end.getHubName(), e.getMessage());
-                }
+                                log.info("{} → {} 거리: {}m, 시간: {}초",
+                                        start.getHubName(), end.getHubName(),
+                                        summary.getDistance(), summary.getDuration());
 
-                try { Thread.sleep(300); } catch (InterruptedException ignored) {}
-            }
-        }
+                                count.getAndIncrement();
 
-        log.info("허브 경로 초기화 완료 (총 {}건)", count);
+                                Thread.sleep(300);
+                            } catch (Exception e) {
+                                log.error("경로 계산 실패: {} → {} ({})",
+                                        start.getHubName(), end.getHubName(), e.getMessage());
+                            }
+                        })
+        );
+
+        log.info("허브 경로 초기화 완료 (총 {}건)", count.get());
     }
 }
