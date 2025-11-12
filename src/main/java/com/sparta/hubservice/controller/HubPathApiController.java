@@ -1,10 +1,8 @@
 package com.sparta.hubservice.controller;
 
-import com.sparta.hubservice.dto.response.GetHubPathResDto;
 import com.sparta.hubservice.dto.response.HubPathApiResDto;
 import com.sparta.hubservice.global.response.ApiResponse;
 import com.sparta.hubservice.service.HubPathService;
-import com.sparta.hubservice.service.HubService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
