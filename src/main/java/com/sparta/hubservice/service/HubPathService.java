@@ -113,4 +113,14 @@ public class HubPathService {
                 .message(message)
                 .build();
     }
+
+    public HubPathApiResDto getHubPathByHubs(UUID startHubId, UUID endHubId) {
+        HubPath hubPath = hubPathRepository.findByStartHub_HubIdAndEndHub_HubId(startHubId, endHubId)
+                .orElseThrow(() -> new HubException(ErrorCode.HUB_PATH_NOT_FOUND));
+
+        return new HubPathApiResDto(
+                hubPath.getDistance(),
+                hubPath.getDuration()
+        );
+    }
 }
