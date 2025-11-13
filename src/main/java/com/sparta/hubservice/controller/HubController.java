@@ -27,8 +27,8 @@ public class HubController {
     // 허브 추가
     @PostMapping
     public ResponseEntity<ApiResponse<CreateHubResDto>> createHub(@RequestBody CreateHubReqDto request,
-                                                                  @RequestHeader(value = "role") String role,
-                                                                  @RequestHeader(value = "user_id") String userIdHeader) {
+                                                                  @RequestHeader(value = "x-role") String role,
+                                                                  @RequestHeader(value = "x-userid") String userIdHeader) {
         Long userId = Long.parseLong(userIdHeader);
         CreateHubResDto response = hubService.createHub(request, role, userId);
         return ResponseEntity.ok(new ApiResponse<>(response));
@@ -39,8 +39,8 @@ public class HubController {
     public ResponseEntity<ApiResponse<UpdateHubResDto>> updateHub(
             @PathVariable UUID hubId,
             @RequestBody UpdateHubReqDto request,
-            @RequestHeader(value = "role") String role,
-            @RequestHeader(value = "user_id") String userIdHeader
+            @RequestHeader(value = "x-role") String role,
+            @RequestHeader(value = "x-userid") String userIdHeader
     ) {
         Long userId = Long.parseLong(userIdHeader);
         UpdateHubResDto response = hubService.updateHub(hubId, request, role, userId);
@@ -51,8 +51,8 @@ public class HubController {
     @DeleteMapping
     public ResponseEntity<ApiResponse<DeleteHubResDto>> deleteHub(
             @RequestBody DeleteHubReqDto request,
-            @RequestHeader(value = "role") String role,
-            @RequestHeader(value = "user_id") String userIdHeader
+            @RequestHeader(value = "x-role") String role,
+            @RequestHeader(value = "x-userid") String userIdHeader
     ) {
         Long userId = Long.parseLong(userIdHeader);
         DeleteHubResDto response = hubService.deleteHub(request, role, userId);
@@ -64,7 +64,7 @@ public class HubController {
     public ResponseEntity<ApiResponse<Page<GetHubPageResDto>>> getHubPage(
         @RequestParam(required = false) String searchParam,
         @PageableDefault(size = 10, sort = { "createdAt", "updatedAt" }, direction = Sort.Direction.ASC) Pageable pageable,
-        @RequestHeader(value = "role") String role
+        @RequestHeader(value = "x-role") String role
     ) {
         Page<GetHubPageResDto> response = hubService.getHubPage(searchParam, pageable, role);
         return ResponseEntity.ok(new ApiResponse<>(response));
@@ -73,7 +73,7 @@ public class HubController {
     // 허브 상세 조회
     @GetMapping("/{hubId}")
     public ResponseEntity<ApiResponse<GetHubDetailResDto>> getHubDetail(@PathVariable UUID hubId,
-                                                                        @RequestHeader(value = "role") String role) {
+                                                                        @RequestHeader(value = "x-role") String role) {
         GetHubDetailResDto response = hubService.getHubDetail(hubId, role);
         return ResponseEntity.ok(new ApiResponse<>(response));
     }

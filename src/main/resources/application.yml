@@ -29,3 +29,7 @@ jwt:
   secret:
     key: ${JWT_SECRET_KEY}
 
+logging :
+  level:
+    org.springframework.cloud.gateway: DEBUG
+
